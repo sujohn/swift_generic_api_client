@@ -62,8 +62,26 @@ struct Password: Encodable {
 
 enum UserEndpoints: EndpointProvider {
     case createPassword(password: Password)
-
+    case updateUserProfile(userName: String?, file: Data?)
   /// skipping other bits 
+
+    var path: String {
+        switch self {
+        case .updateUserProfile:
+            return "/api/v2/user"
+        }
+    }
+
+    var method: RequestMethod {
+        switch self {
+        case .updateUserProfile:
+            return .post
+        }
+    }
+
+    var queryItems: [URLQueryItem]? {
+        return nil
+    }
 
     var body: [String: Any]? {
         switch self {
@@ -71,6 +89,20 @@ enum UserEndpoints: EndpointProvider {
             return password.toDictionary
         default:
             return nil
+        }
+    }
+
+    var multipart: MultipartRequest? {
+        switch self {
+        case .updateUserProfile(let userName, let file):
+            let multipart = MultipartRequest()
+            if let preferredName = userName {
+                multipart.append(fileString: preferredName, withName: "preferredName")
+            }
+            if let file = file {
+                multipart.append(fileData: file, withName: "profilePicture", fileName: "profilePicture.jpg", mimeType: .jpeg)
+            }
+            return multipart
         }
     }
 }
