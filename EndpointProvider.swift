@@ -8,6 +8,8 @@ protocol EndpointProvider {
     var queryItems: [URLQueryItem]? { get }
     var body: [String: Any]? { get }
     var mockFile: String? { get }
+
+    var multipart: MultipartRequest? { get }
 }
 
 extension EndpointProvider {
@@ -22,6 +24,10 @@ extension EndpointProvider {
 
     var token: String { //3
         return ApiConfig.shared.token?.value ?? ""
+    }
+
+    var multipart: MultipartRequest? {
+        return nil
     }
 
     func asURLRequest() throws -> URLRequest { // 4
@@ -53,6 +59,13 @@ extension EndpointProvider {
                 throw ApiError(errorCode: "ERROR-0", message: "Error encoding http body")
             }
         }
+
+        if let multipart = multipart {
+            urlRequest.setValue(multipart.headerValue, forHTTPHeaderField: "Content-Type")
+            urlRequest.setValue("\(multipart.length)", forHTTPHeaderField: "Content-Length")
+            urlRequest.httpBody = multipart.httpBody
+        }
+        
         return urlRequest
     }
 }
